@@ -57,15 +57,40 @@ echo "נמצאו ${#CLIPS[@]} קטעים. מנרמל..."
 i=0
 for clip in "${CLIPS[@]}"; do
   i=$((i + 1))
-  printf "  [%d/%d] %s\n" "$i" "${#CLIPS[@]}" "$clip"
   out=$(printf ".build/%03d.mp4" "$i")
 
-  # מוסיפים פס קול שקט אם אין, כדי שהחיבור יישאר מסונכרן
+  # --- איתור ההקראה של הסצנה ---
+  # ההתאמה נעשית לפי הקידומת המספרית של הקטע: clips/01_opening.mp4
+  # מקבל את ההקראה voice/01.mp3. כך אפשר לשנות שמות קטעים בלי לשבור
+  # את ההתאמה, וסצנה בלי הקראה פשוט תישאר שקטה.
+  prefix="$(basename "$clip" | cut -d_ -f1)"
+  narration=""
+  for ext in mp3 m4a wav aac; do
+    if [ -f "voice/${prefix}.${ext}" ]; then
+      narration="voice/${prefix}.${ext}"
+      break
+    fi
+  done
+
+  if [ -n "$narration" ]; then
+    printf "  [%d/%d] %s  ← %s\n" "$i" "${#CLIPS[@]}" "$clip" "$narration"
+    # apad מאריך את ההקראה בשקט עד סוף הקטע. בלעדיו -shortest היה
+    # חותך את הווידאו באורך ההקראה, שקצרה בדרך כלל מ-8 השניות.
+    AUDIO_INPUT=(-i "$narration")
+    AUDIO_FILTER="apad"
+  else
+    printf "  [%d/%d] %s  (ללא הקראה)\n" "$i" "${#CLIPS[@]}" "$clip"
+    # פס קול שקט — שומר על סנכרון בחיבור גם בסצנות בלי דיבור
+    AUDIO_INPUT=(-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000)
+    AUDIO_FILTER="anull"
+  fi
+
   "$FF" -y -loglevel error \
     -i "$clip" \
-    -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 \
+    "${AUDIO_INPUT[@]}" \
     -vf "scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=decrease,pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=${FPS}" \
-    -map 0:v:0 -map "1:a:0?" \
+    -af "$AUDIO_FILTER" \
+    -map 0:v:0 -map "1:a:0" \
     -shortest \
     -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p \
     -c:a aac -b:a 192k -ar 48000 -ac 2 \
