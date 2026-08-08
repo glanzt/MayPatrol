@@ -1,0 +1,12 @@
+node_modules/
+.build/
+
+# קבצי מדיה — לא נשמרים ב-git
+clips/*.mp4
+clips/*.mov
+clips/*.webm
+output/*.mp4
+assets/images/*
+!assets/images/.gitkeep
+!clips/.gitkeep
+!output/.gitkeep
