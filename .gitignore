@@ -7,6 +7,8 @@ clips/*.mov
 clips/*.webm
 output/*.mp4
 assets/images/*
+assets/reference/*
 !assets/images/.gitkeep
+!assets/reference/.gitkeep
 !clips/.gitkeep
 !output/.gitkeep
