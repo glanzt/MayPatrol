@@ -20,9 +20,7 @@ OUT="${2:-output/final.mp4}"
 WIDTH=1920
 HEIGHT=1080
 FPS=24
-FONT="DejaVu Sans"     # פונט עם כיסוי עברי מלא
-FONTSIZE=42
-MARGIN_V=60
+# עיצוב הכתוביות (פונט, גודל, שוליים) מוגדר ב-scripts/make_ass.py
 
 # --- איתור ffmpeg ---
 if command -v ffmpeg >/dev/null 2>&1; then
@@ -84,11 +82,15 @@ echo "מחבר את הקטעים..."
 # --- שלב 3: צריבת כתוביות בעברית ---
 # libass + libfribidi מטפלים אוטומטית בסדר מימין לשמאל.
 # הטקסט ב-SRT נכתב בסדר לוגי רגיל — אין צורך להפוך אותיות ידנית.
-echo "צורב כתוביות בעברית..."
-STYLE="FontName=${FONT},Fontsize=${FONTSIZE},PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=1,Alignment=2,MarginV=${MARGIN_V}"
+#
+# ההמרה ל-ASS נעשית דרך make_ass.py ולא ישירות מ-SRT: ffmpeg קובע ל-SRT
+# רזולוציית ייחוס של 384x288, ולכן גודל הפונט היה מתנפח פי 3.75 על פריים 1080p.
+echo "מכין את קובץ הכתוביות..."
+python3 scripts/make_ass.py "$SRT" .build/subs.ass "$WIDTH" "$HEIGHT"
 
+echo "צורב כתוביות בעברית..."
 "$FF" -y -loglevel error -i .build/merged.mp4 \
-  -vf "subtitles=${SRT}:force_style='${STYLE}'" \
+  -vf "ass=.build/subs.ass" \
   -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p \
   -c:a copy \
   "$OUT"
