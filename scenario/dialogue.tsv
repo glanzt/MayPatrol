@@ -13,7 +13,7 @@
 #
 # דוברים (ה-voice_id מתועד ב-scenario/production_notes.md):
 #   may       מאי          Pixie
-#   chase     צ'ייס        Cody
+#   chase     קולי         Cody
 #   rubble    ראבל         Jasper
 #
 # scene	start	end	speaker	text
@@ -30,7 +30,7 @@
 6	50.5	54.3	chase	האזעקה נדלקה! יש לנו קריאה!
 6	54.8	59.6	chase	כולם למגדל התצפית, מהר!
 7	60.5	64.3	rubble	אני כבר בדרך!
-7	64.8	69.6	chase	צ'ייס מוכן לפעולה!
+7	64.8	69.6	chase	קולי מוכן לפעולה!
 8	70.5	74.3	chase	ראבל, יש לנו משימה חשובה.
 8	74.8	79.6	rubble	אני מביא את הכלים שלי!
 9	80.5	84.3	may	היי חברים! אני מצטרפת אליכם!
