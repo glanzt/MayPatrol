@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCENE_DURATION = 8.0  # חייב להתאים לאורך הסצנה בתסריט
+SCENE_DURATION = 10.0  # חייב להתאים לאורך הסצנה בתסריט
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from make_srt import parse  # noqa: E402
