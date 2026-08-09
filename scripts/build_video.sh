@@ -24,6 +24,9 @@ OUT="${2:-output/final.mp4}"
 WIDTH=854
 HEIGHT=480
 FPS=24
+# עוצמת מוזיקת הרקע ביחס לדיבור. 0.18 מספיק כדי שתורגש בלי להתחרות
+# בקול. להעלות ל-0.3 למוזיקה בולטת יותר, להוריד ל-0.1 לרמז בלבד.
+MUSIC_VOLUME=0.18
 # עיצוב הכתוביות (פונט, גודל, שוליים) מוגדר ב-scripts/make_ass.py
 
 # --- איתור ffmpeg ---
@@ -122,7 +125,31 @@ echo "צורב כתוביות בעברית..."
   -vf "ass=.build/subs.ass" \
   -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p \
   -c:a copy \
-  "$OUT"
+  .build/subtitled.mp4
+
+# --- שלב 4: מוזיקת רקע (אופציונלי) ---
+# הקובץ הראשון שנמצא ב-music/ מנוגן מתחת לכל הסרטון.
+shopt -s nullglob
+MUSIC=(music/*.mp3 music/*.m4a music/*.wav music/*.aac)
+shopt -u nullglob
+
+if [ ${#MUSIC[@]} -eq 0 ]; then
+  mv .build/subtitled.mp4 "$OUT"
+else
+  echo "מוסיף מוזיקת רקע: ${MUSIC[0]}"
+  # aloop מאריך את המוזיקה אם היא קצרה מהסרטון, ו-volume מנמיך אותה
+  # כדי שלא תתחרה בדיבור. sidechaincompress מוריד אותה עוד קצת בכל
+  # פעם שדמות מדברת ("ducking"), ומחזיר אותה בין הרפליקות.
+  "$FF" -y -loglevel error -i .build/subtitled.mp4 -i "${MUSIC[0]}" \
+    -filter_complex "\
+      [1:a]aloop=loop=-1:size=2e9,volume=${MUSIC_VOLUME},aformat=sample_rates=48000:channel_layouts=stereo[bg]; \
+      [0:a]aformat=sample_rates=48000:channel_layouts=stereo,asplit=2[voice][key]; \
+      [bg][key]sidechaincompress=threshold=0.05:ratio=6:attack=20:release=600[ducked]; \
+      [voice][ducked]amix=inputs=2:normalize=0:duration=first[out]" \
+    -map 0:v:0 -map "[out]" \
+    -c:v copy -c:a aac -b:a 192k -ar 48000 -ac 2 \
+    "$OUT"
+fi
 
 # --- סיכום ---
 # ffmpeg -i ללא קובץ פלט מסיים בקוד שגיאה 1 — ה-|| true מונע נפילה בגלל pipefail

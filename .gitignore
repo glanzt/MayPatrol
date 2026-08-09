@@ -17,3 +17,10 @@ assets/reference/*
 !clips/.gitkeep
 !output/.gitkeep
 !voice/.gitkeep
+
+# מוזיקת רקע — לא נשמרת ב-git
+music/*.mp3
+music/*.m4a
+music/*.wav
+music/*.aac
+!music/.gitkeep
